@@ -1,4 +1,4 @@
-# neurala-coding-test
+# Neurala Coding Interview Test
 Source code for Neurala coding test
 
 
@@ -12,6 +12,8 @@ $ git clone https://github.com/liamdebeasi/neurala-coding-test
 $ npm install
 ```
 _Note: macOS users may need to run `sudo npm install`_
+
+* In the root directory, create an auth.json with host, user, password, and database
 
 * To start the Node server, run
 ```

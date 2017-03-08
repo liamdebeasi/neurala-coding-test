@@ -10,6 +10,11 @@ var mysql = require('mysql');
 var jsonfile = require('jsonfile');
 var bcrypt = require('bcrypt');
 
+/*var passport = require('passport');
+var local = require('passport-local').Strategy;
+var session = require('express-session');
+*/
+
 /**
  * Setup Express server
  * Set JS, CSS, etc location
@@ -22,6 +27,11 @@ var app = express();
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/assets'));
 app.use(expressSanitizer());
+
+/*app.use(passport.initialize())
+app.use(passport.session())
+app.use(session({ session: '' }));*/
+
 app.engine('html', require('ejs').renderFile)
 app.set('view engine', 'ejs');
 
@@ -43,9 +53,45 @@ jsonfile.readFile('auth.json', function(err, obj) {
     
     sql.connect();
 });
-  
+
+
+/* ------------- Passport Functions ------------- */
+/*passport.serializeUser(function(user, done) {
+   done(null, user.id); 
+});
+
+passport.deserializeUser(function(id, done) {
+   findUserById(id, done); 
+});*/
 
 /* ------------- Application Routing ------------- */
+
+/**
+ * Render Dashboard page
+ */
+app.get('/dashboard', function(req, res) {
+    
+    var disabled = false;
+    var count = 0;
+    
+    // First check to see if user has already registered
+    sql.query("select clicked from users where id = ?", 10, function(err, sqlRes, fields) {
+        if (sqlRes.length > 0) {
+            if (sqlRes[0].clicked === '1') {
+                disabled = true;
+            }
+        }  
+        
+        sql.query("select count(*) as count from users where clicked = 1", function(err, sqlRes, fields) {
+            if (sqlRes.length > 0) {
+                count = sqlRes[0].count;
+            }  
+            
+            res.render('dashboard.html', { disabled: disabled, count: count });      
+        });
+          
+    });
+});
 
 /**
  * Render Login page
@@ -61,6 +107,44 @@ app.get('/register', function(req, res) {
    res.render('register.html'); 
 });
 
+app.post('/increment', function(req, res) {
+    // Sanitize inputs    
+    var id = req.sanitize(req.body.id);
+    
+    // Set header to be JSON
+    res.setHeader('Content-Type', 'application/json');
+        
+    // Check to see if user has already clicked button
+    sql.query("select id from users where id = ? and clicked = 0", id, function(err, sqlRes, fields) {
+        
+        if (err) {
+            res.send(JSON.stringify({ success: false, message: err }));
+            res.end();   
+        } else {
+            
+            // User has already registered
+            if (sqlRes.length == 0) {
+                res.send(JSON.stringify({ success: false, message: "You have already clicked the button." }));
+                res.end();   
+            } else {
+                1
+                // Set clicked = 1 for user
+                sql.query('update users set clicked = 1 where id = ?', id, function(err, sqlRes, fields) {
+                    
+                    // If there was an error, send the message to the front end
+                    if (err) {
+                        res.send(JSON.stringify({ success: false, message: error }));
+                        res.end();   
+                    // If query was successful, send result to user
+                    } else {
+                        res.send(JSON.stringify({ success: true, message: "Done" }));
+                        res.end();  
+                    } 
+                });
+            }
+        }
+    });
+});
 
 /**
  * Attempt to register a new user
@@ -125,7 +209,6 @@ app.post('/register', function(req, res) {
                 }
             }
         });
-
     }
 });
 

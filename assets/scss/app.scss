@@ -3,7 +3,7 @@
     transition: all .25s ease-in-out;
 }
 
-.login {
+.login, .dashboard {
     background-color: #eee;
     border-radius: 4px;
     margin: 0 auto;
@@ -16,6 +16,20 @@
     left: 0;
     right: 0;
     transform: translateY(-50%);
+    
+    #count {
+        text-align: center;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin: 0 auto;
+        padding: 10px;
+    }
+    
+    #clickCount {
+        text-align: center;
+        width: 100%;
+    }
     
     .alert {
         position: absolute;
