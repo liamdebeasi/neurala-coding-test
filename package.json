@@ -1,7 +1,9 @@
 {
-  "name": "Neurala Coding Test",
+  "name": "neurala-coding-test",
   "version": "1.0.0",
-  "description": "Coding test for Neurala Interview",
+  "description": "",
+  "keywords: "",
+  "author": "",
   "dependencies": {
     "bcrypt": "^1.0.2",
     "body-parser": "^1.15.2",
