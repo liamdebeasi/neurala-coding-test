@@ -19,7 +19,7 @@ _Note: macOS users may need to run `sudo npm install`_
 ```
 mysql -u root -e "CREATE DATABASE IF NOT EXISTS neurala_debeasi"
 ```
-_Note: If you do not have the CLI installed, you can just create a database on localhost using any database management software like PHPMyAdmin or Sequel Pro_
+_Note: If you do not have the CLI installed, you can just create a database on localhost using any database management software like PHPMyAdmin or Sequel Pro. Database Encoding should be "UTF-8 Unicode" and Database Collation should be "utf8_general_ci"_
 
 * To setup the database's user table, run the following script which will place a user table in the "neurala_debeasi" database:
 ```
