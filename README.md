@@ -5,7 +5,7 @@ Source code for Neurala coding test
 ## Installation
 * Clone this repository to your local machine using
 ``` 
-$ git clone https://github.com/liamdebeasi/neurala-coding-test
+$ git clone https://github.com/liamdebeasi/neurala-coding-test.git
 ```
 * On your local machine, run in the neurala-coding-test directory. This will install all dependencies necessary for running the server
 ```
