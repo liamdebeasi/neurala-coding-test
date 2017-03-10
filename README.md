@@ -7,7 +7,7 @@ Source code for Neurala coding test
 ``` 
 $ git clone https://github.com/liamdebeasi/neurala-coding-test
 ```
-* On your local machine, run in the sandbox-template directory
+* On your local machine, run in the neurala-coding-test directory
 ```
 $ npm install
 ```

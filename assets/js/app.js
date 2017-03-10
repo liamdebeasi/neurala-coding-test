@@ -41,6 +41,7 @@ $('#doRegister').click(function(e) {
             // If successful, notify user
             if (res.success) {
                 hideAlert(); 
+                window.location = "/dashboard";
             // Otherwise, show error   
             } else {
                 showAlert(res.message);
@@ -77,11 +78,14 @@ $('#doLogin').click(function(e) {
                 email: email,
                 password: password
             })
+        }).error(function(err, res) {
+            showAlert("Invalid email or password");
         }).done(function(res) {
              
             // If successful, notify user
             if (res.success) {
                 hideAlert();
+                window.location = "/dashboard";
             // Otherwise, show error    
             } else {
                 showAlert(res.message);
@@ -92,6 +96,7 @@ $('#doLogin').click(function(e) {
     return false;
 });
 
+// Increment button count by 1
 $('#clickCount').click(function(e) {
     e.preventDefault();
 

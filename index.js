@@ -9,12 +9,11 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var jsonfile = require('jsonfile');
 var bcrypt = require('bcrypt');
+var fs = require('fs');
 
-/*var passport = require('passport');
-var local = require('passport-local').Strategy;
+var passport = require('passport');
+var Strategy = require('passport-local').Strategy;
 var session = require('express-session');
-*/
-
 /**
  * Setup Express server
  * Set JS, CSS, etc location
@@ -28,76 +27,161 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname + '/assets'));
 app.use(expressSanitizer());
 
-/*app.use(passport.initialize())
-app.use(passport.session())
-app.use(session({ session: '' }));*/
+
+/**
+ * Get auth keys
+ * Connect to MySQL
+ */
+var config;
+
+try {
+    config = require('./auth.json');
+} catch(err) {
+    config = {};
+    console.log('Unable to read auth.json');
+}
+
+// Connect to MySQL
+var sql = mysql.createConnection({
+     host     : config.host,
+     user     : config.user,
+     password : config.password,
+     database : config.database
+});
+
+sql.connect();
+
+// Setup session handling
+app.use(session({ 
+    secret: config.sessionSecret,
+    httpOnly: true, // prevent browser JS from accessing cookies
+    resave: false, 
+    saveUninitialized: false
+    //cookie: { secure: true } // if this were being served over HTTPS, we would want this on to ensure that
+    // all cookies are secure
+}));
+
+// Setup passport strategy
+passport.use(new Strategy({
+        usernameField: 'email',
+        passwordField: 'password'
+    },
+    function(email, password, done) {
+        // If password not set
+        if (!password) {
+            return done(null, false);
+        
+        // If email was not set, throw error    
+        } else if (!email) {
+            return done(null, false);
+            
+        // Otherwise, attempt to login the user
+        } else {
+        
+            // Get user to check password
+            sql.query('select id, password from users where email = ?', email, function(err, sqlRes, fields) {
+                // If there was an error, send the message to the front end
+                if (err) {
+                    return done(err);   
+                // If user doesn't exist, send error
+                } else if (sqlRes.length == 0) {
+                    return done(null, false);
+                // If query was successful, send result to user
+                } else {
+                    bcrypt.compare(password, sqlRes[0].password, function(err, bcryptRes) {
+                        // If passwords match, log user in
+                        if (bcryptRes) {
+                            return done(null, { id: sqlRes[0].id })
+                        // Otherwise, send error
+                        } else {
+                            return done(null, false);
+                        }
+                    });
+                } 
+            });
+        }
+    }
+));
+
+/* ------------- Passport Functions ------------- */
+passport.serializeUser(function(user, done) {
+    done(null, user.id); 
+});
+
+passport.deserializeUser(function(id, done) {
+    // Check to see if user exists
+    sql.query('select id from users where id = ?', id, function(err, sqlRes, fields) {
+       if (err) {
+           done(err);
+       } else if (sqlRes.length == 0) {
+           done(null);
+       } else {
+           done(null, { id: sqlRes[0].id })
+       }
+    });
+});
+
+// Initialize passport and restore auth state if any
+app.use(passport.initialize());
+app.use(passport.session());
+
 
 app.engine('html', require('ejs').renderFile)
 app.set('view engine', 'ejs');
 
 const saltRounds = 10;
-  
-/**
- * Get auth keys
- */
- var sql;
-jsonfile.readFile('auth.json', function(err, obj) {
 
-    // Connect to MySQL
-    sql = mysql.createConnection({
-         host     : obj.host,
-         user     : obj.user,
-         password : obj.password,
-         database : obj.database
-    });
-    
-    sql.connect();
-});
-
-
-/* ------------- Passport Functions ------------- */
-/*passport.serializeUser(function(user, done) {
-   done(null, user.id); 
-});
-
-passport.deserializeUser(function(id, done) {
-   findUserById(id, done); 
-});*/
 
 /* ------------- Application Routing ------------- */
 
 /**
  * Render Dashboard page
  */
-app.get('/dashboard', function(req, res) {
+app.get('/dashboard',
     
-    var disabled = false;
-    var count = 0;
-    
-    // First check to see if user has already registered
-    sql.query("select clicked from users where id = ?", 10, function(err, sqlRes, fields) {
-        if (sqlRes.length > 0) {
-            if (sqlRes[0].clicked === '1') {
-                disabled = true;
-            }
-        }  
+    // Make sure user is logged in
+    // otherwise, send them to the login page
+    require('connect-ensure-login').ensureLoggedIn('/'),
+    function(req, res) {
         
-        sql.query("select count(*) as count from users where clicked = 1", function(err, sqlRes, fields) {
+        var disabled = false;
+        var count = 0;
+        
+        // First check to see if user has already clicked
+        sql.query("select clicked from users where id = ?", req.user.id, function(err, sqlRes, fields) {
             if (sqlRes.length > 0) {
-                count = sqlRes[0].count;
+                if (sqlRes[0].clicked === '1') {
+                    disabled = true;
+                }
             }  
             
-            res.render('dashboard.html', { disabled: disabled, count: count });      
+            // Get total count of clicks
+            sql.query("select count(*) as count from users where clicked = 1", function(err, sqlRes, fields) {
+                if (sqlRes.length > 0) {
+                    count = sqlRes[0].count;
+                }  
+                
+                res.render('dashboard.html', { disabled: disabled, count: count });      
+            });
+              
         });
-          
-    });
 });
 
 /**
  * Render Login page
  */
-app.get('/', function(req, res) {
-   res.render('index.html'); 
+app.get('/', 
+    require('connect-ensure-login').ensureLoggedOut('/dashboard'),
+    function(req, res) {
+        res.render('index.html'); 
+});
+
+/**
+ * Sign a user out and redirect them to the login page
+ */
+app.get('/logout', function(req, res) {
+   req.logout();
+   res.redirect('/'); 
 });
 
 /**
@@ -107,9 +191,12 @@ app.get('/register', function(req, res) {
    res.render('register.html'); 
 });
 
+/**
+ * Button Click Event
+ */
 app.post('/increment', function(req, res) {
     // Sanitize inputs    
-    var id = req.sanitize(req.body.id);
+    var id = req.user.id;
     
     // Set header to be JSON
     res.setHeader('Content-Type', 'application/json');
@@ -124,7 +211,7 @@ app.post('/increment', function(req, res) {
             
             // User has already registered
             if (sqlRes.length == 0) {
-                res.send(JSON.stringify({ success: false, message: "You have already clicked the button." }));
+                res.send(JSON.stringify({ success: false, message: "That email has already been registered." }));
                 res.end();   
             } else {
                 1
@@ -181,7 +268,7 @@ app.post('/register', function(req, res) {
                 
                 // User has already registered
                 if (sqlRes.length > 0) {
-                    res.send(JSON.stringify({ success: false, message: "You have already registered using that email." }));
+                    res.send(JSON.stringify({ success: false, message: "This email has already been registered" }));
                     res.end();   
                 } else {
                     
@@ -200,8 +287,10 @@ app.post('/register', function(req, res) {
                                 res.end();   
                             // If query was successful, send result to user
                             } else {
-                                res.send(JSON.stringify({ success: true, message: { email: email, password: password, confirmPassword: confirmPassword }}));
-                                res.end();  
+                                passport.authenticate('local')(req, res, function() {
+                                   res.send(JSON.stringify({ success: true, message: { email: email, password: password, confirmPassword: confirmPassword }}));
+                                   res.end();  
+                                }); 
                             } 
                         });
                         
@@ -216,57 +305,13 @@ app.post('/register', function(req, res) {
 /**
  * Attempt to sign a user in
  */
-app.post('/login', function(req, res) {
-    
-    // Sanitize inputs    
-    var email = req.sanitize(req.body.email);
-    var password = req.sanitize(req.body.password);
-    
-    // Set header to be JSON
-    res.setHeader('Content-Type', 'application/json');
-    
-    // If password not set
-    if (!password) {
-        res.send(JSON.stringify({ success: false, message: "Please enter a password"}));
+app.post('/login', 
+    passport.authenticate('local'),
+    function(req, res) {
+        res.send(JSON.stringify({ success: true}));
         res.end();
-    
-    // If email was not set, throw error    
-    } else if (!email) {
-        res.send(JSON.stringify({ success: false, message: "Please enter a valid email"}));
-        res.end();  
-        
-    // Otherwise, attempt to login the user
-    } else {
-    
-        // Get user to check password
-        sql.query('select password from users where email = ?', email, function(err, sqlRes, fields) {
-            
-            // If there was an error, send the message to the front end
-            if (err) {
-                res.send(JSON.stringify({ success: false, message: error }));
-                res.end();   
-            // If user doesn't exist, send error
-            } else if (sqlRes.length == 0) {
-                res.send(JSON.stringify({ success: false, message: "Your email or password does not match"}));
-                res.end();
-            // If query was successful, send result to user
-            } else {
-                bcrypt.compare(password, sqlRes[0].password, function(err, bcryptRes) {
-                    // If passwords match, log user in
-                    if (bcryptRes) {
-                        res.send(JSON.stringify({ success: true, message: "Logged in"}));
-                        res.end();
-                    // Otherwise, send error
-                    } else {
-                        res.send(JSON.stringify({ success: false, message: "Your email or password does not match"}));
-                        res.end();
-                    }
-                });
-            } 
-        });
-
-    }
 });
 
-console.log('Listening on 8888');
+
+console.log('Server running on port 8888');
 app.listen(8888);
