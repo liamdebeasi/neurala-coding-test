@@ -15,8 +15,8 @@ $('#doRegister').click(function(e) {
     var password = $('#password').val();
     var confirmPassword = $('#confirmPassword').val();
     
-    // Do some validation
-    if (!email) {
+    // Do some basic validation
+    if (!email || email.indexOf("@") === -1) {
         showAlert("Please enter a valid email");
     } else if (password.length == 0) {
         showAlert("Please enter a password");
@@ -60,8 +60,8 @@ $('#doLogin').click(function(e) {
     var email = $('#email').val();
     var password = $('#password').val();
     
-    // Do some validation
-    if (!email) {
+    // Do some basic validation
+    if (!email || email.indexOf("@") === -1) {
         showAlert("Please enter a valid email");
     } else if (password.length == 0) {
         showAlert("Please enter a password");
