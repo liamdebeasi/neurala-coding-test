@@ -36,4 +36,4 @@ $ node index.js
 
 ## Project Notes
 * This app is not served over HTTPS by default. In a production setting, we would want to serve it over HTTPS and enable secure session management in `index.js:60`
-* Session management is stored in memory by default and as a result, would not likely scale very well. In a production setting, we would want to use a more scalable session store (See: [Compatible Session Stores]: https://www.npmjs.com/package/express-session#compatible-session-stores)
+* Session management is stored in memory by default and as a result, would not likely scale very well. In a production setting, we would want to use a more scalable session store (See: [Compatible Session Stores](https://www.npmjs.com/package/express-session#compatible-session-stores))
