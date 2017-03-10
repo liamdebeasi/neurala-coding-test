@@ -7,7 +7,7 @@ Source code for Neurala coding test
 ``` 
 $ git clone https://github.com/liamdebeasi/neurala-coding-test.git
 ```
-* On your local machine, run in the neurala-coding-test directory. This will install all dependencies necessary for running the server
+* On your local machine, run the following in the neurala-coding-test directory. This will install all dependencies necessary for running the server
 ```
 $ npm install
 ```
