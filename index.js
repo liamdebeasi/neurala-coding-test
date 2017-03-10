@@ -210,7 +210,7 @@ app.post('/increment', function(req, res) {
             
             // Button has already been clicked once
             if (sqlRes.length == 0) {
-                res.send(JSON.stringify({ success: false, message: "Button has already been clicked.]" }));
+                res.send(JSON.stringify({ success: false, message: "Button has already been clicked" }));
                 res.end();   
             } else {
                 1
