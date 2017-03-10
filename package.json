@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "keywords: "",
-  "author": "",
   "dependencies": {
     "bcrypt": "^1.0.2",
     "body-parser": "^1.15.2",
