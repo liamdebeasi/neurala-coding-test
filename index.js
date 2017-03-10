@@ -7,7 +7,6 @@ var express = require('express');
 var expressSanitizer = require('express-sanitizer');
 var bodyParser = require('body-parser');
 var mysql = require('mysql');
-var jsonfile = require('jsonfile');
 var bcrypt = require('bcrypt');
 var fs = require('fs');
 
