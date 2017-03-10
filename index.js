@@ -149,7 +149,7 @@ app.get('/dashboard',
         // First check to see if user has already clicked
         sql.query("select clicked from users where id = ?", req.user.id, function(err, sqlRes, fields) {
             if (sqlRes.length > 0) {
-                if (sqlRes[0].clicked === '1') {
+                if (sqlRes[0].clicked === 1) {
                     disabled = true;
                 }
             }  
@@ -208,9 +208,9 @@ app.post('/increment', function(req, res) {
             res.end();   
         } else {
             
-            // User has already registered
+            // Button has already been clicked once
             if (sqlRes.length == 0) {
-                res.send(JSON.stringify({ success: false, message: "That email has already been registered." }));
+                res.send(JSON.stringify({ success: false, message: "Button has already been clicked.]" }));
                 res.end();   
             } else {
                 1
