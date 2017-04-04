@@ -1,26 +1,15 @@
 {
-  "name": "neurala-coding-test",
+  "name": "mbta-api",
   "version": "1.0.0",
   "description": "",
   "keywords": "",
   "author": "Liam DeBeasi",
   "dependencies": {
-    "bcrypt": "^1.0.2",
     "body-parser": "^1.15.2",
-    "connect-ensure-login": "^0.1.1",
     "ejs": "^2.5.2",
     "express": "~4.0.0",
     "express-sanitizer": "^1.0.2",
     "express-session": "^1.15.1",
-    "fs": "0.0.1-security",
-    "gulp": "3.9.1",
-    "gulp-clean-css": "3.0.3",
-    "gulp-concat": "2.6.1",
-    "gulp-sass": "3.1.0",
-    "gulp-strip-debug": "1.1.0",
-    "gulp-uglify": "2.0.1",
-    "mysql": "^2.13.0",
-    "passport": "^0.3.2",
-    "passport-local": "^1.0.0"
+    "fs": "0.0.1-security"
   }
 }
